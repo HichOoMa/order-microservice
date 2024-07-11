@@ -1,0 +1,43 @@
+version: "3"
+services:
+  kafka:
+    image: docker.io/bitnami/kafka:3.4
+    hostname: kafka
+    ports:
+      - "9092:9092"
+      - "9094:9094"
+    volumes:
+      - "kafka_data:/bitnami"
+    environment:
+      - KAFKA_ENABLE_KRAFT=yes
+      - KAFKA_CFG_PROCESS_ROLES=broker,controller
+      - KAFKA_CFG_CONTROLLER_LISTENER_NAMES=CONTROLLER
+      - KAFKA_CFG_LISTENERS=PLAINTEXT://:9092,CONTROLLER://:9093,EXTERNAL://:9094
+      - KAFKA_CFG_LISTENER_SECURITY_PROTOCOL_MAP=CONTROLLER:PLAINTEXT,PLAINTEXT:PLAINTEXT,EXTERNAL:PLAINTEXT
+      - KAFKA_CFG_ADVERTISED_LISTENERS=PLAINTEXT://kafka:9092,EXTERNAL://kafka:9094
+      - KAFKA_BROKER_ID=1
+      - KAFKA_CFG_CONTROLLER_QUORUM_VOTERS=1@kafka:9093
+      - ALLOW_PLAINTEXT_LISTENER=yes
+      - KAFKA_CFG_NODE_ID=1
+      # - KAFKA_AUTO_CREATE_TOPICS_ENABLE=true
+      - BITNAMI_DEBUG=yes
+      - KAFKA_CFG_NUM_PARTITIONS=2
+
+  kafka-ui:
+    container_name: kafka-ui
+    image: 'provectuslabs/kafka-ui:latest'
+    ports:
+      - 8080:8080
+    environment:
+      KAFKA_CLUSTERS_0_BOOTSTRAP_SERVERS: kafka:9092
+      KAFKA_CLUSTERS_0_NAME: r4zt_wrqTRuT7W2NJsB_GA
+
+  # kafka-init:
+  #   image: 'bitnami/kafka:3.3.1'
+  #   depends_on:
+  #     - kafka
+  #   entrypoint: [ '/bin/bash', '-c', 'while ! /opt/bitnami/kafka/bin/kafka-topics.sh --list --bootstrap-server kafka:9092; do sleep 1; done; /opt/bitnami/kafka/bin/kafka-topics.sh --create --topic my-topic --bootstrap-server kafka:9092 --replication-factor 1 --partitions 1 && /opt/bitnami/kafka/bin/kafka-topics.sh --create --topic my-other-topic --bootstrap-server kafka:9092 --replication-factor 1 --partitions 1' ]
+
+volumes:
+  kafka_data:
+    driver: local
